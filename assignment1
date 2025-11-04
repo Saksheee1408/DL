@@ -1,0 +1,47 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+x=np.array([[0,0],[0,1],[1,0],[1,1]])
+y=np.array([0,0,0,1])
+w1=0
+w2=0
+b=0
+lr=0.1
+#MANUAL TRAINING:
+for i in range(4):
+  x1=x[i][0]
+  x2=x[i][1]
+  target=y[i]
+  sum_value=x1*w1+x2*w2+b
+  if sum_value>=0:
+    output=1
+  else:
+    output=0
+  error=target-output
+  w1=w1+error*lr*x1
+  w2 = w2 + lr * error * x2
+  b = b + lr * error
+  print(f"Input: {x1},{x2} | Target: {target} | Output: {output} | New w1={w1}, w2={w2}, b={b}")
+x1_points = np.linspace(-0.5, 1.5, 100)
+
+# Equation of line:  w1*x1 + w2*x2 + b = 0
+# => x2 = -(w1*x1 + b) / w2
+if w2 != 0:
+    x2_points = -(w1 * x1_points + b) / w2
+else:
+    x2_points = np.zeros_like(x1_points)
+
+# Plot points and line
+plt.figure(figsize=(6,5))
+plt.scatter(x[:,0], x[:,1], c=y, cmap='bwr', s=100)   # red=1, blue=0
+plt.plot(x1_points, x2_points, 'k--', label='Decision Boundary')
+
+plt.title("Perceptron Decision Boundary (AND Gate)")
+plt.xlabel("Input 1")
+plt.ylabel("Input 2")
+plt.xlim(-0.5, 1.5)
+plt.ylim(-0.5, 1.5)
+plt.legend()
+plt.grid(True)
+plt.show()
+
