@@ -1,0 +1,94 @@
+from keras.datasets import mnist
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Flatten
+from keras.regularizers import l2
+import matplotlib.pyplot as plt
+
+# Load data
+(X_train, y_train), (X_test, y_test) = mnist.load_data()
+
+# Model 1 - NO Regularization
+print("Model 1: NO Regularization")
+model1 = Sequential()
+model1.add(Flatten(input_shape=(28, 28)))
+model1.add(Dense(128, activation='relu'))
+model1.add(Dense(64, activation='relu'))
+model1.add(Dense(10, activation='softmax'))
+model1.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+history1 = model1.fit(X_train, y_train, epochs=10, validation_split=0.2)
+
+print("L2 regularization")
+model2=Sequential()
+model2.add(Flatten(input_shape=(28,28)))
+model2.add(Dense(128,activation='relu',kernel_regularizer=l2(0.001)))
+model2.add(Dense(128,activation='relu',kernel_regularizer=l2(0.001)))
+model2.add(Dense(10, activation='softmax'))
+model2.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+history2 = model2.fit(X_train, y_train, epochs=10, validation_split=0.2)
+
+print("\nModel 3: Dropout")
+model3 = Sequential()
+model3.add(Flatten(input_shape=(28, 28)))
+model3.add(Dense(128, activation='relu'))
+model3.add(Dropout(0.3))
+model3.add(Dense(64, activation='relu'))
+model3.add(Dropout(0.3))
+model3.add(Dense(10, activation='softmax'))
+model3.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+history3 = model3.fit(X_train, y_train, epochs=10, validation_split=0.2)
+
+print("\n--- Test Results ---")
+_, acc1 = model1.evaluate(X_test, y_test)
+print(f"Model 1: {acc1*100:.2f}%")
+
+_, acc2 = model2.evaluate(X_test, y_test)
+print(f"Model 2: {acc2*100:.2f}%")
+
+_, acc3 = model3.evaluate(X_test, y_test)
+print(f"Model 3: {acc3*100:.2f}%")
+
+# Plot Loss
+plt.figure(figsize=(15, 5))
+
+plt.subplot(1, 3, 1)
+plt.plot(history1.history['loss'])
+plt.plot(history1.history['val_loss'])
+plt.title('No Regularization')
+plt.legend(['Train', 'Val'])
+
+plt.subplot(1, 3, 2)
+plt.plot(history2.history['loss'])
+plt.plot(history2.history['val_loss'])
+plt.title('L2 Regularization')
+plt.legend(['Train', 'Val'])
+
+plt.subplot(1, 3, 3)
+plt.plot(history3.history['loss'])
+plt.plot(history3.history['val_loss'])
+plt.title('Dropout')
+plt.legend(['Train', 'Val'])
+
+plt.show()
+
+# Plot Accuracy
+plt.figure(figsize=(15, 5))
+
+plt.subplot(1, 3, 1)
+plt.plot(history1.history['accuracy'])
+plt.plot(history1.history['val_accuracy'])
+plt.title('No Regularization')
+plt.legend(['Train', 'Val'])
+
+plt.subplot(1, 3, 2)
+plt.plot(history2.history['accuracy'])
+plt.plot(history2.history['val_accuracy'])
+plt.title('L2 Regularization')
+plt.legend(['Train', 'Val'])
+
+plt.subplot(1, 3, 3)
+plt.plot(history3.history['accuracy'])
+plt.plot(history3.history['val_accuracy'])
+plt.title('Dropout')
+plt.legend(['Train', 'Val'])
+
+plt.show()
