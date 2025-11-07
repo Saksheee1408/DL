@@ -1,0 +1,24 @@
+import numpy as np
+import matplotlib.pyplot as plt
+x=np.linspace(-10,10,1000)
+def sigmoid(x):
+  return 1 / ( 1 + np.exp(-x))
+def tanh(x):
+  return np.tanh(x)
+def relu(x):
+  return np.maximum(0,x)
+functions={
+    "Sigmoid":sigmoid,
+    "Tanh":tanh,
+    "ReLu":relu
+}
+plt.figure(figsize=(10, 6))
+for name, func in functions.items():
+    plt.plot(x, func(x), label=name)
+
+plt.title("Comparison of Activation Functions in MLP", fontsize=14)
+plt.xlabel("Input (x)")
+plt.ylabel("Output f(x)")
+plt.legend()
+plt.grid(True)
+plt.show()
