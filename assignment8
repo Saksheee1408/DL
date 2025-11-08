@@ -1,0 +1,19 @@
+import tensorflow as tf
+from tensorflow import keras
+(x_train,y_train),(x_test,y_test)=keras.datasets.mnist.load_data()
+x_train=x_train/255.0
+x_test=x_test/255.0
+lrs=[0.001,0.01]
+batches=[32,128]
+for lr in lrs:
+  for batch in batches:
+    print(f"\n learning rate={lr},batch={batch}")
+    model=keras.Sequential([keras.layers.Flatten(input_shape=(28,28)),
+                            keras.layers.Dense(128,activation='relu'),
+                            keras.layers.Dense(128,activation='softmax')])
+    opt=keras.optimizers.Adam(learning_rate=lr)
+    model.compile(optimizer=opt,loss='sparse_categorical_crossentropy',metrics=['accuracy'])
+    history = model.fit(x_train, y_train, epochs=2, batch_size=batch,
+                            validation_data=(x_test, y_test), verbose=0)
+    acc = history.history['val_accuracy'][-1] * 100
+    print(f"Accuracy: {acc:.2f}%")
