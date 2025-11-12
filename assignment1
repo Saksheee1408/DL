@@ -30,18 +30,15 @@ if w2 != 0:
     x2_points = -(w1 * x1_points + b) / w2
 else:
     x2_points = np.zeros_like(x1_points)
+# 5️⃣ Plot decision boundary
+x1_points = np.linspace(-0.5, 1.5, 10)
+x2_points = -(w1*x1_points + b)/w2   # line equation: w1*x1 + w2*x2 + b = 0
 
-# Plot points and line
-plt.figure(figsize=(6,5))
-plt.scatter(x[:,0], x[:,1], c=y, cmap='bwr', s=100)   # red=1, blue=0
-plt.plot(x1_points, x2_points, 'k--', label='Decision Boundary')
-
+plt.scatter(x[:,0], x[:,1], c=y, cmap='bwr', s=100)
+plt.plot(x1_points, x2_points, 'k--')
 plt.title("Perceptron Decision Boundary (AND Gate)")
-plt.xlabel("Input 1")
-plt.ylabel("Input 2")
-plt.xlim(-0.5, 1.5)
-plt.ylim(-0.5, 1.5)
-plt.legend()
-plt.grid(True)
+plt.xlabel("x1")
+plt.ylabel("x2")
 plt.show()
+
 
