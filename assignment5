@@ -1,0 +1,86 @@
+import tensorflow as tf
+from tensorflow import keras
+
+# Load MNIST
+(x_train,y_train),(x_test,y_test)=keras.datasets.mnist.load_data()
+
+# Normalize
+x_train = x_train/255.0
+x_test  = x_test/255.0
+
+# ---------------- MLP MODEL ----------------
+print("MLP MODEL")
+mlp = keras.Sequential([
+    keras.layers.Flatten(input_shape=(28,28)),
+    keras.layers.Dense(128, activation='relu'),
+    keras.layers.Dense(10, activation='softmax')
+])
+
+mlp.compile(optimizer='adam',
+            loss='sparse_categorical_crossentropy',
+            metrics=['accuracy'])
+
+history_mlp = mlp.fit(x_train, y_train, epochs=2,
+                      validation_data=(x_test, y_test))
+
+mlp_acc = history_mlp.history['val_accuracy'][-1] * 100
+print(f"MLP Accuracy: {mlp_acc:.2f}%\n")
+
+
+# ---------------- CNN WITHOUT MAXPOOL ----------------
+print("CNN WITHOUT MAXPOOLING")
+
+# reshape for CNN
+x_train_cnn = x_train.reshape(-1,28,28,1)
+x_test_cnn  = x_test.reshape(-1,28,28,1)
+
+cnn = keras.Sequential([
+    keras.layers.Conv2D(32,(3,3),activation='relu',input_shape=(28,28,1)),
+    keras.layers.Conv2D(64,(3,3),activation='relu'),
+    keras.layers.Flatten(),
+    keras.layers.Dense(64,activation='relu'),
+    keras.layers.Dense(10,activation='softmax')
+])
+
+cnn.compile(optimizer='adam',
+            loss='sparse_categorical_crossentropy',
+            metrics=['accuracy'])
+
+history_cnn = cnn.fit(x_train_cnn, y_train, epochs=2,
+                      validation_data=(x_test_cnn, y_test))
+
+cnn_acc = history_cnn.history['val_accuracy'][-1] * 100
+print(f"CNN Accuracy: {cnn_acc:.2f}%\n")
+
+
+# ---------------- CNN WITH AUGMENTATION ----------------
+print("CNN WITH AUGMENTATION (NO MAXPOOL)")
+
+datagen = keras.preprocessing.image.ImageDataGenerator(
+    rotation_range=10,
+    width_shift_range=0.1,
+    height_shift_range=0.1
+)
+
+datagen.fit(x_train_cnn)
+
+cnn_aug = keras.Sequential([
+    keras.layers.Conv2D(32,(3,3),activation='relu',input_shape=(28,28,1)),
+    keras.layers.Conv2D(64,(3,3),activation='relu'),
+    keras.layers.Flatten(),
+    keras.layers.Dense(64,activation='relu'),
+    keras.layers.Dense(10,activation='softmax')
+])
+
+cnn_aug.compile(optimizer='adam',
+                loss='sparse_categorical_crossentropy',
+                metrics=['accuracy'])
+
+history_aug = cnn_aug.fit(
+    datagen.flow(x_train_cnn, y_train, batch_size=64),
+    epochs=2,
+    validation_data=(x_test_cnn, y_test)
+)
+
+cnn_aug_acc = history_aug.history['val_accuracy'][-1] * 100
+print(f"AUGMENTED CNN Accuracy: {cnn_aug_acc:.2f}%")
