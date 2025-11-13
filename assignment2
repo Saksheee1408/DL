@@ -1,38 +1,98 @@
 import pandas as pd
-test=pd.read_csv('Desktop/mnist_test.csv')
-train=pd.read_csv('Desktop/mnist_train.csv')
-X_train = train.iloc[:, 1:]
-y_train = train.iloc[:, 0]
-X_test = test.iloc[:, 1:]
-y_test = test.iloc[:, 0]
-y_train = to_categorical(y_train, num_classes=10)
-y_test = to_categorical(y_test, num_classes=10)
-model=Sequential()
-model.add(Dense(128,activation='relu',input_shape=(784,)))
-model.add(Dense(64,activation='relu'))
-model.add(Dense(10,activation='softmax'))
-model.compile(optimizer='adam',loss='categorical_crossentropy',metrics=['accuracy'])
-history = model.fit(X_train, y_train, epochs=3, validation_split=0.2, verbose=1)
-test_acc,test_loss=model.evaluate(X_test,y_test)
+from keras.models import Sequential
+from keras.layers import Dense, Flatten , Dropout
+import matplotlib.pyplot as plt
 
+test = pd.read_csv('Desktop/mnist_test.csv')
+train = pd.read_csv('Desktop/mnist_train.csv')
+
+X_train = train.iloc[:, 1:].values
+y_train = train.iloc[:, 0].values
+X_test = test.iloc[:, 1:].values
+y_test = test.iloc[:, 0].values
+
+
+X_train = X_train / 255.0
+X_test  = X_test / 255.0
+
+print("Without Regularization")
+
+model = Sequential()
+
+model.add(Flatten(input_shape=(784,)))  # flatten 28x28 to 784 features
+model.add(Dense(128, activation='relu'))
+model.add(Dense(64, activation='relu'))
+model.add(Dense(10, activation='softmax'))  # 10 classes
+
+model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+
+
+history = model.fit(X_train, y_train,
+                    epochs=3,
+                    validation_split=0.2,
+                    verbose=1)
+print("With l2 Regularization")
+model2=Sequential()
+model2.add(Flatten(input_shape=(784,)))
+model2.add(Dense(128,activation='relu',kernel_regularizer=l2(0.02)))
+model2.add(Dense(64,activation='relu',kernel_regularizer=l2(0.02)))
+model2.add(Dense(10,activation='softmax'))
+model2.compile(optimizer='adam'
+,loss='sparse_categorical_crossentropy',metrics=['accuracy'])
+history1=model2.fit(X_train,y_train,validation_split=0.2,verbose=1)
+
+print("With Dropout")
+model3=Sequential()
+model3.add(Flatten(input_shape=(784,)))
+model3.add(Dense(128,activation='relu'))
+model3.add(Dropout(0.2))
+model3.add(Dense(64,activation='relu'))
+model3.add(Dropout(0.2))
+model3.add(Dense(10,activation='softmax'))
+model3.compile(optimizer='adam'
+,loss='sparse_categorical_crossentropy',metrics=['accuracy'])
+history3=model3.fit(X_train,y_train,validation_split=0.2,verbose=1)
+
+
+loss1, acc1 = model.evaluate(X_test, y_test)
+loss2, acc2 = model2.evaluate(X_test, y_test)
+loss3, acc3 = model3.evaluate(X_test, y_test)
+
+# Print in %
+print(f"Accuracy of Model 1 (No Regularization): {acc1*100:.2f}%")
+print(f"Accuracy of Model 2 (L2 Regularization): {acc2*100:.2f}%")
+print(f"Accuracy of Model 3 (Dropout): {acc3*100:.2f}%")
+
+print("Plotting of accuracy curve")
 plt.figure(figsize=(12,5))
+plt.plot(history.history['accuracy'],label='No reg-Train')
+plt.plot(history.history['val_accuracy'],label='No reg-train')
+plt.plot(history1.history['accuracy'], label='L2 - Train')
+plt.plot(history1.history['val_accuracy'], label='L2 - Val')
 
-# Accuracy Plot
-plt.subplot(1,2,1)
-plt.plot(history.history['accuracy'], label='Train Acc')
-plt.plot(history.history['val_accuracy'], label='Val Acc')
-plt.title('Accuracy Curve')
-plt.xlabel('Epoch')
-plt.ylabel('Accuracy')
+plt.plot(history3.history['accuracy'], label='Dropout - Train')
+plt.plot(history3.history['val_accuracy'], label='Dropout - Val')
+
+plt.title("Training vs Validation Accuracy")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
 plt.legend()
-
-# Loss Plot
-plt.subplot(1,2,2)
-plt.plot(history.history['loss'], label='Train Loss')
-plt.plot(history.history['val_loss'], label='Val Loss')
-plt.title('Loss Curve')
-plt.xlabel('Epoch')
-plt.ylabel('Loss')
-plt.legend()
-
 plt.show()
+plt.figure(figsize=(12, 5))
+plt.plot(history.history['loss'], label='No Reg - Train')
+plt.plot(history.history['val_loss'], label='No Reg - Val')
+
+plt.plot(history1.history['loss'], label='L2 - Train')
+plt.plot(history1.history['val_loss'], label='L2 - Val')
+
+plt.plot(history3.history['loss'], label='Dropout - Train')
+plt.plot(history3.history['val_loss'], label='Dropout - Val')
+
+plt.title("Training vs Validation Loss")
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.legend()
+plt.show()
+
