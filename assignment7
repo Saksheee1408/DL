@@ -1,0 +1,65 @@
+import tensorflow as tf
+from tensorflow import keras
+
+# -------------------- Load Data --------------------
+(x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
+
+# Filter only cat (class=3) and dog (class=5)
+train_mask = (y_train == 3) | (y_train == 5)
+test_mask  = (y_test == 3)  | (y_test == 5)
+
+x_train = x_train[train_mask].astype("float32") / 255.0
+y_train = (y_train[train_mask] == 5).astype("int32")   # dog=1, cat=0
+
+x_test = x_test[test_mask].astype("float32") / 255.0
+y_test = (y_test[test_mask] == 5).astype("int32")
+
+# Resize images to 224x224 (required for VGG16)
+x_train = tf.image.resize(x_train, (224,224))
+x_test  = tf.image.resize(x_test,  (224,224))
+
+# -------------------- Load Pretrained VGG16 --------------------
+base = keras.applications.VGG16(
+    weights="imagenet",
+    include_top=False,
+    input_shape=(224,224,3)
+)
+
+base.trainable = False   # Freeze layers
+
+# -------------------- Build Model --------------------
+model = keras.Sequential([
+    base,
+    keras.layers.Flatten(),
+    keras.layers.Dense(128, activation='relu'),
+    keras.layers.Dense(1, activation='sigmoid')
+])
+
+model.compile(optimizer='adam',
+              loss='binary_crossentropy',
+              metrics=['accuracy'])
+
+# -------------------- Train Frozen Model --------------------
+print("\nTraining With Frozen Layers:")
+history = model.fit(x_train, y_train, epochs=3,
+                    validation_data=(x_test, y_test))
+
+acc1 = history.history['val_accuracy'][-1] * 100
+print(f"Frozen Accuracy: {acc1:.2f}%")
+
+# -------------------- Fine-Tuning --------------------
+print("\nFine-tuning Last Layers:")
+
+base.trainable = True
+for layer in base.layers[:-4]:   # unfreeze last 4 layers only
+    layer.trainable = False
+
+model.compile(optimizer=keras.optimizers.Adam(1e-5),
+              loss='binary_crossentropy',
+              metrics=['accuracy'])
+
+history2 = model.fit(x_train, y_train, epochs=2,
+                     validation_data=(x_test, y_test))
+
+acc2 = history2.history['val_accuracy'][-1] * 100
+print(f"Fine-tuned Accuracy: {acc2:.2f}%")
